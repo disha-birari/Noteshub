@@ -14,14 +14,20 @@ import {
   LogOut,
   Bell,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  ThumbsUp, 
+  Eye, 
+  Download, 
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UploadNoteModal from '@/components/UploadNoteModal';
 
 import { auth, db } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { incrementView, toggleLike, incrementDownload } from '@/lib/engagement';
+import { formatDistanceToNow } from 'date-fns';
 
 import { useState, useEffect } from 'react';
 
@@ -31,6 +37,7 @@ export default function DashboardPage() {
 
   const [userData, setUserData] = useState<any>(null);
   const [notes, setNotes] = useState<any[]>([]);
+  const [recommendedNotes, setRecommendedNotes] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -41,56 +48,58 @@ export default function DashboardPage() {
     setMounted(true);
   }, []);
 
-  // Auth Redirection
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth');
-    }
-  }, [user, loading, router]);
-
   const fetchData = async () => {
     if (!user) return;
     try {
       setLoadingData(true);
-      // 1. Fetch User Data (Branch, Semester, Year)
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       
       if (userDoc.exists()) {
         const data = userDoc.data();
         setUserData(data);
 
-        // 1.5 Check if onboarding is completed
         if (!data.onboardingCompleted) {
           router.push('/questionnaire');
           return;
         }
 
-        // 2. Setup Real-time listener for Notes
         const notesRef = collection(db, 'notes');
         const branchLower = (data.branch || '').toLowerCase();
         
-        // Listen for changes
+        // ML-Inspired Recommendation Query
         const q = query(
           notesRef, 
           where('branch', '==', branchLower)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-          let fetchedNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+          let allNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
           
-          // Filter locally for semester
-          if (data.semester) {
-            fetchedNotes = fetchedNotes.filter(note => note.semester?.toString() === data.semester?.toString());
-          }
-          
-          // Sort by date
-          fetchedNotes.sort((a, b) => {
-            const dateA = a.createdAt?.seconds || 0;
-            const dateB = b.createdAt?.seconds || 0;
-            return dateB - dateA;
+          // Scoring Algorithm
+          const scoredNotes = allNotes.map(note => {
+            let score = 0;
+            
+            // 1. Semester Match
+            if (note.semester?.toString() === data.semester?.toString()) score += 100;
+            
+            // 2. Year Match
+            if (note.year?.toString() === data.year?.toString()) score += 50;
+            
+            // 3. Engagement Score
+            score += (note.likes || 0) * 5;
+            score += (note.downloads || 0) * 10;
+            score += (note.views || 0) * 1;
+            
+            // 4. Quality Multiplier
+            score += (note.qualityScore || 5) * 2;
+
+            return { ...note, recommendationScore: score };
           });
 
-          setNotes(fetchedNotes);
+          scoredNotes.sort((a, b) => b.recommendationScore - a.recommendationScore);
+
+          setRecommendedNotes(scoredNotes.slice(0, 4));
+          setNotes(scoredNotes);
           setLoadingData(false);
         });
 
@@ -106,32 +115,14 @@ export default function DashboardPage() {
     }
   };
 
-  // Data Fetching and Onboarding Check
   useEffect(() => {
     let unsubscribe: any;
-    
     const setup = async () => {
       unsubscribe = await fetchData();
     };
-
     setup();
-    
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [user, router]);
-
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-    router.push('/');
-  };
-
-  const stats = [
-    { label: 'Total Notes', value: notes.length.toString(), icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Study Circles', value: '0', icon: Folder, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'AI Scans', value: '0', icon: Sparkles, color: 'text-amber-600', bg: 'bg-amber-50' },
-  ];
 
   // Prevent hydration mismatch and wait for auth
   if (!mounted || loading || !user) {
@@ -154,33 +145,25 @@ export default function DashboardPage() {
         </div>
 
         <nav className="flex-1 px-4 py-4 flex flex-col gap-1">
-          {[
-            { name: 'My Library', icon: FileText, active: true },
-            { name: 'Shared with me', icon: Folder, active: false },
-            { name: 'Recent Activity', icon: Clock, active: false },
-            { name: 'AI Scanner', icon: Sparkles, active: false },
-          ].map((item) => (
-            <button
-              key={item.name}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                item.active 
-                ? 'bg-[#1E293B] text-white shadow-lg shadow-slate-200' 
-                : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B]'
-              }`}
-            >
-              <item.icon size={18} />
-              {item.name}
-            </button>
-          ))}
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-[#1E293B] text-white shadow-lg"
+          >
+            <Sparkles size={18} />
+            For You
+          </button>
+          <button 
+            onClick={() => router.push('/dashboard/library')}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] transition-all"
+          >
+            <Folder size={18} />
+            My Library
+          </button>
         </nav>
 
         <div className="p-4 border-t border-[#F1F5F9] flex flex-col gap-2">
-          <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F1F5F9] transition-all">
-            <Settings size={18} />
-            Settings
-          </button>
           <button 
-            onClick={handleSignOut}
+            onClick={async () => { await signOut(auth); router.push('/'); }}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
           >
             <LogOut size={18} />
@@ -191,30 +174,16 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="flex-1 ml-64 p-10">
-        {/* Header */}
         <header className="flex justify-between items-center mb-10">
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-black text-[#1E293B]">
-              Welcome back, {user.displayName?.split(' ')[0] || 'Scholar'}! 👋
+              Top Picks for {user.displayName?.split(' ')[0]} 🎯
             </h1>
             <p className="text-[#64748B] font-medium">
-              {loadingData ? 'Loading your curriculum...' : userData ? `Curriculum: ${userData.branch?.toUpperCase()} • Semester ${userData.semester}` : 'Ready to master your courses today?'}
+              Based on your {userData?.branch?.toUpperCase()} Curriculum
             </p>
           </div>
-
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={18} />
-              <input 
-                type="text" 
-                placeholder="Search notes..."
-                className="pl-12 pr-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm outline-none focus:border-[#1E293B] transition-all w-64"
-              />
-            </div>
-            <button className="w-10 h-10 bg-white border border-[#E2E8F0] rounded-xl flex items-center justify-center text-[#64748B] hover:bg-white hover:border-[#1E293B] transition-all relative">
-              <Bell size={20} />
-              <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-            </button>
             <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm bg-[#E2E8F0]">
               <img 
                 src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} 
@@ -225,97 +194,107 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-6 mb-10">
-          {stats.map((stat, i) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              key={stat.label}
-              className="bg-white p-6 rounded-2xl border border-[#F1F5F9] shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <div className={`w-14 h-14 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center`}>
-                <stat.icon size={24} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-[#1E293B]">{stat.value}</span>
-                <span className="text-sm font-medium text-[#64748B]">{stat.label}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Notes Section */}
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-[#1E293B]">Recent Notes</h2>
-            <Button 
-              onClick={() => setIsUploadModalOpen(true)}
-              className="bg-[#1E293B] text-white rounded-xl px-5 h-10 font-bold flex items-center gap-2 hover:bg-[#334155]"
-            >
-              <Plus size={18} />
-              New Note
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            {loadingData ? (
-              <div className="col-span-2 text-center py-10 text-[#64748B]">Loading your notes...</div>
-            ) : notes.length > 0 ? (
-              notes.map((note) => (
+        {/* Recommended Horizontal Scroll */}
+        {recommendedNotes.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Sparkles size={20} className="text-amber-500" />
+              <h2 className="text-xl font-bold text-[#1E293B]">Recommended Quality Notes</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              {recommendedNotes.map((note) => (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
                   key={note.id}
-                  className="group bg-white p-6 rounded-2xl border border-[#F1F5F9] shadow-sm hover:border-[#1E293B] transition-all cursor-pointer relative overflow-hidden"
+                  whileHover={{ y: -5 }}
+                  className="bg-white p-6 rounded-3xl border border-[#F1F5F9] shadow-sm hover:shadow-xl hover:border-blue-200 transition-all relative overflow-hidden"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="p-3 bg-[#F8FAFC] rounded-lg text-[#1E293B] group-hover:bg-[#1E293B] group-hover:text-white transition-colors">
-                      <FileText size={20} />
-                    </div>
-                    <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">
-                      {note.createdAt ? new Date(note.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-[#1E293B] mb-2">{note.title}</h3>
-                  <p className="text-sm text-[#64748B] leading-relaxed line-clamp-2">
-                    {note.description || `Study materials for ${note.subject}.`}
-                  </p>
-                  
-                  <div className="mt-6 pt-4 border-t border-[#F1F5F9] flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#64748B] bg-[#F1F5F9] px-2 py-1 rounded-md">
-                       {note.subject || 'General'}
-                    </div>
-                    <a 
-                      href={note.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-[#3B82F6] font-bold text-xs hover:underline"
-                    >
-                      View Note
-                      <ArrowRight size={12} />
-                    </a>
-                  </div>
+                   <div className="absolute top-0 right-0 p-4">
+                     <div className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full flex items-center gap-1">
+                       <Star size={10} fill="currentColor" />
+                       PREMIUM
+                     </div>
+                   </div>
+                   
+                   <div className="flex items-center gap-4 mb-4">
+                     <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                       <FileText size={24} />
+                     </div>
+                     <div>
+                       <h3 className="font-bold text-[#1E293B] leading-tight">{note.title}</h3>
+                       <p className="text-xs text-[#64748B] font-medium">{note.subject}</p>
+                     </div>
+                   </div>
+
+                   <div className="flex items-center gap-6 text-[#94A3B8] mb-6">
+                      <div className="flex items-center gap-1.5 text-xs font-bold">
+                        <Eye size={14} /> {note.views || 0}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold">
+                        <ThumbsUp size={14} /> {note.likes || 0}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-blue-500">
+                        <Download size={14} /> {note.downloads || 0}
+                      </div>
+                   </div>
+
+                   <div className="flex items-center gap-3">
+                     <button 
+                       onClick={() => { incrementView(note.id); window.open(note.url, '_blank'); }}
+                       className="flex-1 h-12 bg-[#1E293B] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-black transition-all"
+                     >
+                       <Eye size={16} /> View Note
+                     </button>
+                     <button 
+                        onClick={() => toggleLike(note.id)}
+                        className="w-12 h-12 border border-[#E2E8F0] rounded-xl flex items-center justify-center text-[#64748B] hover:bg-red-50 hover:text-red-500 transition-all"
+                      >
+                       <ThumbsUp size={18} />
+                     </button>
+                   </div>
                 </motion.div>
-              ))
-            ) : (
-              <div className="col-span-2 bg-white p-10 rounded-2xl border border-dashed border-[#CBD5E1] text-center flex flex-col items-center justify-center gap-4">
-                <div className="w-16 h-16 bg-[#F1F5F9] rounded-2xl flex items-center justify-center text-[#94A3B8]">
-                  <Folder size={32} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* All Notes List */}
+        <section>
+          <h2 className="text-xl font-bold text-[#1E293B] mb-6">Recent from your Branch</h2>
+          <div className="space-y-4">
+            {notes.map((note) => (
+              <div 
+                key={note.id}
+                className="bg-white p-5 rounded-2xl border border-[#F1F5F9] flex items-center justify-between hover:border-blue-100 transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                    <FileText size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#1E293B] text-sm">{note.title}</h4>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">{note.subject}</span>
+                      <span className="w-1 h-1 bg-[#CBD5E1] rounded-full" />
+                      <span className="text-[10px] font-bold text-[#94A3B8]">
+                        {note.createdAt ? formatDistanceToNow(new Date(note.createdAt.seconds * 1000)) + ' ago' : 'Just now'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-[#1E293B]">No notes found yet</h3>
-                  <p className="text-[#64748B] mt-2">There are currently no notes available for {userData?.branch?.toUpperCase()} Semester {userData?.semester}.</p>
+                <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-4 text-[#94A3B8]">
+                    <div className="flex items-center gap-1.5 text-xs font-bold"><Eye size={14} /> {note.views || 0}</div>
+                    <div className="flex items-center gap-1.5 text-xs font-bold"><ThumbsUp size={14} /> {note.likes || 0}</div>
+                  </div>
+                  <button 
+                    onClick={() => { incrementDownload(note.id); incrementView(note.id); window.open(note.url, '_blank'); }}
+                    className="h-10 px-4 border border-[#E2E8F0] rounded-lg text-sm font-bold text-[#1E293B] hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Download size={16} /> Get PDF
+                  </button>
                 </div>
-                <Button 
-                  onClick={() => setIsUploadModalOpen(true)}
-                  className="mt-4 bg-[#1E293B] text-white rounded-xl px-6 h-12 font-bold hover:bg-[#334155]"
-                >
-                  Upload First Note
-                </Button>
               </div>
-            )}
+            ))}
           </div>
         </section>
       </main>
