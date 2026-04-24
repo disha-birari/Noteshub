@@ -1,24 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, collection, query, where, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { motion } from 'framer-motion';
-import { 
-  Plus, 
-  FileText, 
-  Folder, 
-  LogOut,
-  Sparkles,
-  Trash2,
-  ExternalLink,
-  Loader2
-} from 'lucide-react';
+import { Loader2, Plus, TrendingUp, FileText, ExternalLink, Trash2, Folder } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UploadNoteModal from '@/components/UploadNoteModal';
-import { auth, db } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
-import { collection, query, where, onSnapshot, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import Sidebar from '@/components/Sidebar';
+import { Target, Calendar, Award } from 'lucide-react';
 
 export default function LibraryPage() {
   const { user, loading } = useAuth();
@@ -29,6 +22,17 @@ export default function LibraryPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // Mock Study Stats
+  const studyStats = [
+    { label: 'Courses Completed', value: 4, total: 6, icon: Award, color: 'bg-green-500' },
+    { label: 'Weekly Study Goal', value: 12, total: 20, icon: Target, color: 'bg-blue-500' },
+  ];
+
+  const upcomingExams = [
+    { subject: 'Data Structures', date: 'May 15', daysLeft: 20 },
+    { subject: 'Engineering Maths', date: 'May 18', daysLeft: 23 },
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -45,7 +49,6 @@ export default function LibraryPage() {
     };
     fetchUserData();
 
-    // Listen for notes uploaded by THIS user
     const q = query(
       collection(db, 'notes'),
       where('uploadedBy', '==', user.uid)
@@ -80,58 +83,75 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-[#E2E8F0] flex flex-col fixed h-full z-20">
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#1E293B] rounded-lg flex items-center justify-center transform rotate-45">
-             <div className="w-4 h-4 bg-white/20 rounded-full" />
-          </div>
-          <span className="text-xl font-bold text-[#1E293B]">Notes Hub</span>
-        </div>
-
-        <nav className="flex-1 px-4 py-4 flex flex-col gap-1">
-          <button 
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] transition-all"
-          >
-            <Sparkles size={18} />
-            For You
-          </button>
-          <button 
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-[#1E293B] text-white shadow-lg"
-          >
-            <Folder size={18} />
-            My Library
-          </button>
-        </nav>
-
-        <div className="p-4 border-t border-[#F1F5F9] flex flex-col gap-2">
-          <button 
-            onClick={async () => { await signOut(auth); router.push('/'); }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
-          >
-            <LogOut size={18} />
-            Sign Out
-          </button>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1 ml-64 p-10">
         <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-3xl font-black text-[#1E293B]">My Library</h1>
-            <p className="text-[#64748B] font-medium mt-1">Manage and upload your academic contributions</p>
+            <h1 className="text-3xl font-black text-[#1E293B]">Library & Tracking</h1>
+            <p className="text-[#64748B] font-medium mt-1">Monitor your academic progress and manage materials</p>
           </div>
           <Button 
             onClick={() => setIsUploadModalOpen(true)}
-            className="bg-[#1E293B] text-white rounded-xl px-6 h-12 font-bold flex items-center gap-2 hover:bg-black shadow-lg"
+            className="bg-[#1E293B] text-white rounded-xl px-6 h-12 font-bold flex items-center gap-2 hover:bg-black shadow-lg transition-all"
           >
             <Plus size={20} />
-            Upload New Note
+            Upload Note
           </Button>
         </header>
 
+        {/* Study Progress Section */}
+        <div className="grid grid-cols-3 gap-6 mb-12">
+          <div className="col-span-2 bg-white p-8 rounded-3xl border border-[#F1F5F9] shadow-sm">
+            <h2 className="text-lg font-bold text-[#1E293B] mb-6 flex items-center gap-2">
+              <TrendingUp size={20} className="text-blue-500" />
+              Study Progress
+            </h2>
+            <div className="grid grid-cols-2 gap-8">
+              {studyStats.map((stat) => (
+                <div key={stat.label}>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-bold text-slate-600">{stat.label}</span>
+                    <span className="text-sm font-black text-slate-900">{stat.value}/{stat.total}</span>
+                  </div>
+                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(stat.value / stat.total) * 100}%` }}
+                      className={`h-full ${stat.color} rounded-full`}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-[#1E293B] p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <Calendar size={20} className="text-blue-400" />
+              Exam Timeline
+            </h2>
+            <div className="space-y-4">
+              {upcomingExams.map((exam) => (
+                <div key={exam.subject} className="flex justify-between items-center bg-white/10 p-3 rounded-xl border border-white/10">
+                  <div>
+                    <p className="text-xs font-bold text-white/60 uppercase">{exam.date}</p>
+                    <p className="font-bold text-sm">{exam.subject}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-black">{exam.daysLeft}</p>
+                    <p className="text-[10px] font-bold text-white/40 uppercase">Days</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* My Notes List */}
+        <h2 className="text-xl font-bold text-[#1E293B] mb-6">My Uploaded Notes</h2>
         <div className="grid grid-cols-1 gap-4">
           {loadingData ? (
             <div className="flex justify-center py-20">
@@ -155,25 +175,21 @@ export default function LibraryPage() {
                     <div className="flex items-center gap-4 mt-1 text-xs font-bold text-[#94A3B8] uppercase">
                       <span>{note.subject}</span>
                       <span className="w-1 h-1 bg-slate-300 rounded-full" />
-                      <span>{note.branch}</span>
-                      <span className="w-1 h-1 bg-slate-300 rounded-full" />
                       <span>Sem {note.semester}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-3">
                   <button 
                     onClick={() => window.open(note.url, '_blank')}
                     className="p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all"
-                    title="View Note"
                   >
                     <ExternalLink size={20} />
                   </button>
                   <button 
                     onClick={() => handleDelete(note.id)}
                     className="p-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all"
-                    title="Delete Note"
                   >
                     <Trash2 size={20} />
                   </button>
@@ -182,19 +198,10 @@ export default function LibraryPage() {
             ))
           ) : (
             <div className="py-20 text-center flex flex-col items-center gap-4 border-2 border-dashed border-slate-200 rounded-3xl bg-white">
-              <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center">
-                <Folder size={40} />
+              <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center">
+                <Folder size={32} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">Your library is empty</h3>
-                <p className="text-slate-500 max-w-xs mx-auto mt-2 font-medium">Start sharing your notes with other students to build your academic profile.</p>
-              </div>
-              <Button 
-                onClick={() => setIsUploadModalOpen(true)}
-                className="mt-4 bg-[#1E293B] text-white rounded-xl px-8 h-12 font-bold"
-              >
-                Upload Your First Note
-              </Button>
+              <p className="text-slate-500 font-bold">No notes uploaded yet.</p>
             </div>
           )}
         </div>
@@ -205,8 +212,9 @@ export default function LibraryPage() {
         onClose={() => setIsUploadModalOpen(false)}
         user={user}
         userData={userData}
-        onUploadSuccess={() => {}} // Snapshot takes care of updates
+        onUploadSuccess={() => {}}
       />
     </div>
   );
 }
+

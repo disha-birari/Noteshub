@@ -1,5 +1,6 @@
 import { db } from './firebase';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, increment, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+
 
 /**
  * Increments the view count for a note
@@ -36,6 +37,9 @@ export const incrementDownload = async (noteId: string) => {
  * (Simple version: just increments. For a real app, you'd track WHICH user liked it)
  * @param noteId The Firestore document ID of the note
  */
+/**
+ * Toggles a like for a note
+ */
 export const toggleLike = async (noteId: string) => {
   try {
     const noteRef = doc(db, 'notes', noteId);
@@ -46,3 +50,29 @@ export const toggleLike = async (noteId: string) => {
     console.error('Error toggling like:', error);
   }
 };
+
+/**
+ * Toggles a bookmark for a note
+ */
+
+export const toggleBookmark = async (userId: string, noteId: string, noteData: any) => {
+  try {
+    const bookmarkRef = doc(db, 'users', userId, 'bookmarks', noteId);
+    const docSnap = await getDoc(bookmarkRef);
+
+    if (docSnap.exists()) {
+      await deleteDoc(bookmarkRef);
+      return false; // Removed
+    } else {
+      await setDoc(bookmarkRef, {
+        ...noteData,
+        bookmarkedAt: new Date()
+      });
+      return true; // Added
+    }
+  } catch (error) {
+    console.error('Error toggling bookmark:', error);
+    throw error;
+  }
+};
+

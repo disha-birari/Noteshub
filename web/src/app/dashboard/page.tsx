@@ -3,6 +3,8 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+
+
 import { motion } from 'framer-motion';
 import { 
   Plus, 
@@ -18,15 +20,21 @@ import {
   ThumbsUp, 
   Eye, 
   Download, 
-  Star
+  Star,
+  Bookmark
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import UploadNoteModal from '@/components/UploadNoteModal';
 
+import { Button } from '@/components/ui/button';
+import Sidebar from '@/components/Sidebar';
+
+
+import UploadNoteModal from '@/components/UploadNoteModal';
 import { auth, db } from '@/lib/firebase';
+
 import { signOut } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
-import { incrementView, toggleLike, incrementDownload } from '@/lib/engagement';
+import { incrementView, toggleLike, incrementDownload, toggleBookmark } from '@/lib/engagement';
+
 import { formatDistanceToNow } from 'date-fns';
 
 import { useState, useEffect } from 'react';
@@ -39,7 +47,9 @@ export default function DashboardPage() {
   const [notes, setNotes] = useState<any[]>([]);
   const [recommendedNotes, setRecommendedNotes] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+
   const [mounted, setMounted] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -133,47 +143,23 @@ export default function DashboardPage() {
     );
   }
 
+  const filteredNotes = notes.filter(note => 
+    note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredRecommended = recommendedNotes.filter(note => 
+    note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-[#E2E8F0] flex flex-col fixed h-full z-20">
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#1E293B] rounded-lg flex items-center justify-center transform rotate-45">
-             <div className="w-4 h-4 bg-white/20 rounded-full" />
-          </div>
-          <span className="text-xl font-bold text-[#1E293B]">Notes Hub</span>
-        </div>
-
-        <nav className="flex-1 px-4 py-4 flex flex-col gap-1">
-          <button 
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-[#1E293B] text-white shadow-lg"
-          >
-            <Sparkles size={18} />
-            For You
-          </button>
-          <button 
-            onClick={() => router.push('/dashboard/library')}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#1E293B] transition-all"
-          >
-            <Folder size={18} />
-            My Library
-          </button>
-        </nav>
-
-        <div className="p-4 border-t border-[#F1F5F9] flex flex-col gap-2">
-          <button 
-            onClick={async () => { await signOut(auth); router.push('/'); }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
-          >
-            <LogOut size={18} />
-            Sign Out
-          </button>
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1 ml-64 p-10">
+
         <header className="flex justify-between items-center mb-10">
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-black text-[#1E293B]">
@@ -184,6 +170,20 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 pr-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm outline-none focus:border-[#1E293B] transition-all w-64"
+              />
+            </div>
+            <button className="w-10 h-10 bg-white border border-[#E2E8F0] rounded-xl flex items-center justify-center text-[#64748B] hover:bg-white hover:border-[#1E293B] transition-all relative">
+              <Bell size={20} />
+              <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+            </button>
             <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm bg-[#E2E8F0]">
               <img 
                 src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} 
@@ -250,7 +250,16 @@ export default function DashboardPage() {
                       >
                        <ThumbsUp size={18} />
                      </button>
+                     <button 
+                        onClick={() => {
+                          if (user) toggleBookmark(user.uid, note.id, note);
+                        }}
+                        className="w-12 h-12 border border-[#E2E8F0] rounded-xl flex items-center justify-center text-[#64748B] hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+                      >
+                       <Bookmark size={18} />
+                     </button>
                    </div>
+
                 </motion.div>
               ))}
             </div>
