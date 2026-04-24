@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/Sidebar';
 import { 
@@ -12,7 +12,8 @@ import {
   FileText, 
   Plus,
   Loader2,
-  Info
+  Info,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '@/lib/firebase';
@@ -28,8 +29,9 @@ import {
 } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function CircleChatPage() {
-  const { id } = useParams();
+function CircleChatContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
   const { user } = useAuth();
   const router = useRouter();
   const [circle, setCircle] = useState<any>(null);
@@ -205,5 +207,17 @@ export default function CircleChatPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function CircleChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-600" size={40} />
+      </div>
+    }>
+      <CircleChatContent />
+    </Suspense>
   );
 }

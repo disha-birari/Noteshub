@@ -114,7 +114,7 @@ export default function CirclesPage() {
                 whileHover={{ y: -5 }}
                 key={circle.id}
                 className="bg-white p-8 rounded-3xl border border-[#F1F5F9] shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all cursor-pointer group"
-                onClick={() => router.push(`/dashboard/circles/${circle.id}`)}
+                onClick={() => router.push(`/dashboard/circles/chat?id=${circle.id}`)}
               >
                 <div className="flex justify-between items-start mb-6">
                   <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">

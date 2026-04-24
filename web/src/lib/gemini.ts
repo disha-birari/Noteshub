@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, Content } from "@google/generative-ai";
 
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -30,8 +30,15 @@ export const chatWithAI = async (history: { role: string; parts: string }[], mes
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    
+    // Convert history to the format required by GoogleGenerativeAI
+    const formattedHistory: Content[] = history.map(item => ({
+      role: item.role === 'model' ? 'model' : 'user',
+      parts: [{ text: item.parts }]
+    }));
+
     const chat = model.startChat({
-      history: history,
+      history: formattedHistory,
       generationConfig: {
         maxOutputTokens: 1000,
       },
