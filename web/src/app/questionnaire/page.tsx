@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
 import { ChevronRight, ChevronLeft, Check, ArrowRight } from 'lucide-react';
+import BookLoader from '@/components/BookLoader';
+
 
 const BRANCHES = [
   { id: 'cse', title: 'Computer Science Engineering', subtitle: 'CSE, IT, Software Engineering', icon: '💻' },
@@ -40,6 +43,8 @@ export default function QuestionnairePage() {
   const [semester, setSemester] = useState('');
   const [year, setYear] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showBookLoader, setShowBookLoader] = useState(false);
+
 
   const router = useRouter();
   const { user } = useAuth();
@@ -76,12 +81,19 @@ export default function QuestionnairePage() {
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
-      router.push('/dashboard');
+      setShowBookLoader(true);
+      
+      // Keep loading true so the background UI doesn't flicker
+      // and the button stays in "Saving..." state if visible
+      
+      // Show the animation for 3 seconds before redirecting
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 3000);
     } catch (error) {
       console.error("Error saving questionnaire data:", error);
       alert("Failed to save data. Please check your Firestore security rules.");
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only reset loading on error
     }
   };
 
@@ -135,7 +147,29 @@ export default function QuestionnairePage() {
         </div>
       </header>
 
+      {/* Book Loader Overlay */}
+      <AnimatePresence>
+        {showBookLoader && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-white flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <BookLoader />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
       {/* Main Content */}
+
       <main className="flex-1 w-full flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-2xl">
           <motion.div

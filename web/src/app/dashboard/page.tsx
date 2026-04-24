@@ -25,34 +25,43 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-[#1E293B] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    router.push('/auth');
-    return null;
-  }
-
   const [userData, setUserData] = useState<any>(null);
   const [notes, setNotes] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Auth Redirection
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth');
+    }
+  }, [user, loading, router]);
+
+  // Data Fetching and Onboarding Check
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
       try {
+        setLoadingData(true);
         // 1. Fetch User Data (Branch, Semester, Year)
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         
         if (userDoc.exists()) {
           const data = userDoc.data();
           setUserData(data);
+
+          // 1.5 Check if onboarding is completed
+          if (!data.onboardingCompleted) {
+            router.push('/questionnaire');
+            return;
+          }
 
           // 2. Fetch Notes based on User's Branch
           const notesRef = collection(db, 'notes');
@@ -67,16 +76,21 @@ export default function DashboardPage() {
           }
           
           setNotes(fetchedNotes);
+        } else {
+          // User exists in Auth but not in Firestore yet? 
+          // This happens right after signup before questionnaire
+          router.push('/questionnaire');
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        setError("Failed to load dashboard data.");
       } finally {
         setLoadingData(false);
       }
     };
 
     fetchData();
-  }, [user]);
+  }, [user, router]);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -84,10 +98,20 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { label: 'Total Notes', value: '128', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Study Circles', value: '12', icon: Folder, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'AI Scans', value: '45', icon: Sparkles, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Total Notes', value: notes.length.toString(), icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Study Circles', value: '0', icon: Folder, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'AI Scans', value: '0', icon: Sparkles, color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
+
+  // Prevent hydration mismatch and wait for auth
+  if (!mounted || loading || !user) {
+    return (
+      <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#1E293B] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
