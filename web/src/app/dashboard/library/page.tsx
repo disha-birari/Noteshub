@@ -86,8 +86,8 @@ export default function LibraryPage() {
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-10">
-        <header className="flex justify-between items-center mb-10">
+      <main className="flex-1 lg:ml-64 p-4 pt-16 lg:pt-10 lg:p-10">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 lg:mb-10">
           <div>
             <h1 className="text-3xl font-black text-[#1E293B]">Library & Tracking</h1>
             <p className="text-[#64748B] font-medium mt-1">Monitor your academic progress and manage materials</p>
@@ -102,13 +102,13 @@ export default function LibraryPage() {
         </header>
 
         {/* Study Progress Section */}
-        <div className="grid grid-cols-3 gap-6 mb-12">
-          <div className="col-span-2 bg-white p-8 rounded-3xl border border-[#F1F5F9] shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+          <div className="lg:col-span-2 bg-white p-6 lg:p-8 rounded-3xl border border-[#F1F5F9] shadow-sm">
             <h2 className="text-lg font-bold text-[#1E293B] mb-6 flex items-center gap-2">
               <TrendingUp size={20} className="text-blue-500" />
               Study Progress
             </h2>
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8">
               {studyStats.map((stat) => (
                 <div key={stat.label}>
                   <div className="flex justify-between mb-2">
@@ -164,7 +164,7 @@ export default function LibraryPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 key={note.id}
-                className="bg-white p-6 rounded-2xl border border-[#F1F5F9] shadow-sm flex items-center justify-between group hover:border-[#1E293B] transition-all"
+                className="bg-white p-4 lg:p-6 rounded-2xl border border-[#F1F5F9] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:border-[#1E293B] transition-all"
               >
                 <div className="flex items-center gap-5">
                   <div className="w-14 h-14 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">

@@ -88,8 +88,8 @@ export default function CirclesPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
       <Sidebar />
-      <main className="flex-1 ml-64 p-10">
-        <header className="flex justify-between items-center mb-10">
+      <main className="flex-1 lg:ml-64 p-4 pt-16 lg:pt-10 lg:p-10">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 lg:mb-10">
           <div>
             <h1 className="text-3xl font-black text-[#1E293B]">Study Circles</h1>
             <p className="text-[#64748B] font-medium mt-1">Collaborate with peers from {userData?.branch?.toUpperCase()}</p>

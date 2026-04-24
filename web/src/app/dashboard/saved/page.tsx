@@ -51,7 +51,7 @@ export default function SavedNotesPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
       <Sidebar />
-      <main className="flex-1 ml-64 p-10">
+      <main className="flex-1 lg:ml-64 p-4 pt-16 lg:pt-10 lg:p-10">
         <header className="mb-10">
           <h1 className="text-3xl font-black text-[#1E293B]">Saved Notes</h1>
           <p className="text-[#64748B] font-medium mt-1">Your personal collection of important resources</p>
@@ -69,7 +69,7 @@ export default function SavedNotesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 key={note.id}
-                className="bg-white p-6 rounded-2xl border border-[#F1F5F9] shadow-sm flex items-center justify-between hover:border-indigo-200 transition-all group"
+                className="bg-white p-4 lg:p-6 rounded-2xl border border-[#F1F5F9] shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-indigo-200 transition-all group"
               >
                 <div className="flex items-center gap-5">
                   <div className="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center">

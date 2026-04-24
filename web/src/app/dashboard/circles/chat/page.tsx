@@ -107,10 +107,10 @@ function CircleChatContent() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
       <Sidebar />
-      <main className="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 lg:ml-64 flex flex-col h-screen overflow-hidden">
         {/* Chat Header */}
-        <header className="p-6 bg-white border-b border-[#E2E8F0] flex justify-between items-center z-10 shadow-sm">
-          <div className="flex items-center gap-4">
+        <header className="p-4 lg:p-6 bg-white border-b border-[#E2E8F0] flex justify-between items-center z-10 shadow-sm">
+          <div className="flex items-center gap-3 lg:gap-4">
             <button 
               onClick={() => router.push('/dashboard/circles')}
               className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400 hover:text-slate-900"
@@ -140,7 +140,7 @@ function CircleChatContent() {
         {/* Message Area */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/50"
+          className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-4 lg:space-y-6 bg-slate-50/50"
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
@@ -162,7 +162,7 @@ function CircleChatContent() {
                   <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 mt-1 shadow-sm border border-white">
                     <img src={msg.senderPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`} alt="Avatar" />
                   </div>
-                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[60%]`}>
+                  <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[80%] sm:max-w-[60%]`}>
                     {!isMe && <span className="text-[10px] font-black text-slate-400 ml-1 mb-1 uppercase tracking-wider">{msg.senderName}</span>}
                     <div className={`p-4 rounded-2xl text-sm font-medium shadow-sm leading-relaxed ${
                       isMe ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-slate-700 rounded-tl-none border border-white'
@@ -180,7 +180,7 @@ function CircleChatContent() {
         </div>
 
         {/* Chat Input */}
-        <div className="p-6 bg-white border-t border-[#E2E8F0]">
+        <div className="p-3 lg:p-6 bg-white border-t border-[#E2E8F0]">
           <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-3">
             <button 
               type="button"

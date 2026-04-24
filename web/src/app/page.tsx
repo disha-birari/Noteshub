@@ -11,7 +11,7 @@ export default function LandingPage() {
   const { user, loading } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] font-inter antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#F9FAFB] font-inter antialiased overflow-x-hidden w-full">
       {/* Header / Navbar */}
       <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-[#E2E8F0]">
         <div className="max-w-[1200px] mx-auto h-16 px-6 flex items-center justify-between">
@@ -52,18 +52,18 @@ export default function LandingPage() {
 
       <main className="max-w-[1200px] mx-auto px-6">
         {/* Hero Section */}
-        <section className="py-32 grid lg:grid-cols-2 gap-12 items-center">
+        <section className="py-16 md:py-32 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="flex flex-col gap-8"
           >
-            <h1 className="text-[72px] font-extrabold leading-[1] tracking-tight text-[#1E293B]">
+            <h1 className="text-[36px] sm:text-[48px] md:text-[56px] lg:text-[72px] font-extrabold leading-[1.05] tracking-tight text-[#1E293B]">
               Find Your<br />Perfect Notes<br />with AI Power
             </h1>
-            <p className="text-[20px] text-[#64748B] leading-[1.4] max-w-[576px]">
-              Stop scrolling through endless folders. Our AI matches<br className="hidden md:block" />you with study materials that fit your course syllabus and<br className="hidden md:block" />learning style perfectly.
+            <p className="text-base md:text-[20px] text-[#64748B] leading-[1.5] max-w-[576px]">
+              Stop scrolling through endless folders. Our AI matches you with study materials that fit your course syllabus and learning style perfectly.
             </p>
             <div className="flex flex-wrap gap-4 mt-2">
               <Button 
@@ -149,7 +149,7 @@ export default function LandingPage() {
         </section>
 
         {/* Smart-Scan Preview */}
-        <section className="py-24 border-t border-[#F1F5F9] grid lg:grid-cols-2 gap-20 items-center">
+        <section className="py-12 md:py-24 border-t border-[#F1F5F9] grid lg:grid-cols-2 gap-10 md:gap-20 items-center">
           <div className="flex gap-6 items-stretch">
              {/* Raw Input Mock */}
              <div className="flex-1 flex flex-col gap-4">
@@ -185,9 +185,9 @@ export default function LandingPage() {
 
           <div className="flex flex-col gap-4">
             <span className="text-[14px] font-bold text-[#3B82F6] uppercase tracking-[1.4px]">AI Optimization</span>
-            <h2 className="text-[48px] font-extrabold text-[#1E293B] leading-[1]">Smart-Scan Preview</h2>
-            <p className="text-[18px] text-[#64748B] leading-[1.6] mt-4">
-              Say goodbye to messy handwriting. Our proprietary AI<br className="hidden md:block" />transforms your raw ink notes into searchable, organized, and<br className="hidden md:block" />beautifully formatted PDFs in seconds.
+            <h2 className="text-[28px] md:text-[48px] font-extrabold text-[#1E293B] leading-[1.1]">Smart-Scan Preview</h2>
+            <p className="text-base md:text-[18px] text-[#64748B] leading-[1.6] mt-4">
+              Say goodbye to messy handwriting. Our proprietary AI transforms your raw ink notes into searchable, organized, and beautifully formatted PDFs in seconds.
             </p>
             
             <div className="flex flex-col gap-5 mt-6">
@@ -211,10 +211,10 @@ export default function LandingPage() {
         <section className="py-24 border-t border-[#F1F5F9]">
            <div className="text-center flex flex-col items-center gap-4 mb-16">
               <span className="text-[14px] font-bold text-[#3B82F6] uppercase tracking-[1.4px]">Collaboration</span>
-              <h2 className="text-[48px] font-extrabold text-[#1E293B] leading-[1]">Study Circles</h2>
-              <p className="text-[18px] text-[#64748B] max-w-[672px] leading-[1.6]">
-                 Don't study alone. Join live collaborative rooms where students from your courses share real-time insights and materials.
-              </p>
+               <h2 className="text-[28px] md:text-[48px] font-extrabold text-[#1E293B] leading-[1.1]">Study Circles</h2>
+               <p className="text-base md:text-[18px] text-[#64748B] max-w-[672px] leading-[1.6] px-4 md:px-0">
+                  Don't study alone. Join live collaborative rooms where students from your courses share real-time insights and materials.
+               </p>
            </div>
            
            <div className="grid md:grid-cols-3 gap-8">
@@ -258,15 +258,15 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section className="py-24 relative overflow-hidden">
-           <div className="bg-[#1E293B] rounded-[40px] py-24 px-12 text-center text-white relative shadow-2xl overflow-hidden">
+           <div className="bg-[#1E293B] rounded-[24px] md:rounded-[40px] py-12 px-6 md:py-24 md:px-12 text-center text-white relative shadow-2xl overflow-hidden">
               {/* Decorative Glows */}
               <div className="absolute top-[-300px] right-[-300px] w-[600px] h-[600px] bg-white/5 blur-[60px] rounded-full -z-0" />
               <div className="absolute bottom-[-200px] left-[-200px] w-[400px] h-[400px] bg-blue-400/10 blur-[50px] rounded-full -z-0" />
               
               <div className="relative z-10 flex flex-col items-center gap-8">
-                 <h2 className="text-[60px] font-extrabold leading-[1]">Ready to boost your grades?</h2>
-                 <p className="text-[20px] text-[#CBD5E1] font-medium max-w-[672px] leading-[1.4]">
-                    Join over 500,000 students already using Noteshub to simplify<br className="hidden md:block" />their academic journey.
+                 <h2 className="text-[28px] md:text-[44px] lg:text-[60px] font-extrabold leading-[1.1]">Ready to boost your grades?</h2>
+                 <p className="text-base md:text-[20px] text-[#CBD5E1] font-medium max-w-[672px] leading-[1.5]">
+                    Join over 500,000 students already using Noteshub to simplify their academic journey.
                  </p>
                   <div className="flex flex-wrap justify-center gap-5 mt-4">
                     <Button 

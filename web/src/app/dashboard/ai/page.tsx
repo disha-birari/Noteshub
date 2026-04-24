@@ -43,10 +43,10 @@ export default function AIPage() {
     <div className="min-h-screen bg-[#F8FAFC] flex">
       <Sidebar />
       
-      <main className="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+      <main className="flex-1 lg:ml-64 flex flex-col h-screen overflow-hidden">
         {/* Header */}
-        <header className="p-6 bg-white border-b border-[#E2E8F0] flex justify-between items-center">
-          <div className="flex items-center gap-3">
+        <header className="p-4 lg:p-6 bg-white border-b border-[#E2E8F0] flex justify-between items-center">
+          <div className="flex items-center gap-3 ml-12 lg:ml-0">
             <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
               <Sparkles size={20} />
             </div>
@@ -68,7 +68,7 @@ export default function AIPage() {
         {/* Chat Container */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-8 space-y-6"
+          className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6"
         >
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-6">
@@ -110,7 +110,7 @@ export default function AIPage() {
                 }`}>
                   {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
                 </div>
-                <div className={`max-w-[70%] p-5 rounded-3xl text-sm font-medium leading-relaxed shadow-sm ${
+                <div className={`max-w-[85%] sm:max-w-[70%] p-4 lg:p-5 rounded-3xl text-sm font-medium leading-relaxed shadow-sm ${
                   msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-[#1E293B] rounded-tl-none border border-slate-100'
                 }`}>
                   {msg.parts}
@@ -132,7 +132,7 @@ export default function AIPage() {
         </div>
 
         {/* Input Bar */}
-        <div className="p-6 bg-white border-t border-[#E2E8F0]">
+        <div className="p-4 lg:p-6 bg-white border-t border-[#E2E8F0]">
           <form onSubmit={handleSend} className="max-w-4xl mx-auto relative">
             <input
               type="text"

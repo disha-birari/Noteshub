@@ -158,18 +158,18 @@ export default function DashboardPage() {
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-10">
+      <main className="flex-1 lg:ml-64 p-4 pt-16 lg:pt-10 lg:p-10">
 
-        <header className="flex justify-between items-center mb-10">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 lg:mb-10">
           <div className="flex flex-col gap-1">
-            <h1 className="text-3xl font-black text-[#1E293B]">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#1E293B]">
               Top Picks for {user.displayName?.split(' ')[0] || 'Student'} 🎯
             </h1>
             <p className="text-[#64748B] font-medium">
               Based on your {userData?.branch?.toUpperCase()} Curriculum
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={18} />
               <input 
@@ -177,7 +177,7 @@ export default function DashboardPage() {
                 placeholder="Search notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm outline-none focus:border-[#1E293B] transition-all w-64"
+                className="pl-12 pr-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm outline-none focus:border-[#1E293B] transition-all w-full sm:w-64"
               />
             </div>
             <button className="w-10 h-10 bg-white border border-[#E2E8F0] rounded-xl flex items-center justify-center text-[#64748B] hover:bg-white hover:border-[#1E293B] transition-all relative">
@@ -201,7 +201,7 @@ export default function DashboardPage() {
               <Sparkles size={20} className="text-amber-500" />
               <h2 className="text-xl font-bold text-[#1E293B]">Recommended Quality Notes</h2>
             </div>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
               {recommendedNotes.map((note) => (
                 <motion.div
                   key={note.id}
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                       </div>
                    </div>
 
-                   <div className="flex items-center gap-3">
+                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                      <button 
                        onClick={() => { incrementView(note.id); window.open(note.url, '_blank'); }}
                        className="flex-1 h-12 bg-[#1E293B] text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-black transition-all"
@@ -273,7 +273,7 @@ export default function DashboardPage() {
             {notes.map((note) => (
               <div 
                 key={note.id}
-                className="bg-white p-5 rounded-2xl border border-[#F1F5F9] flex items-center justify-between hover:border-blue-100 transition-all group"
+                className="bg-white p-4 lg:p-5 rounded-2xl border border-[#F1F5F9] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-blue-100 transition-all group"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
@@ -290,7 +290,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-4 lg:gap-8 w-full sm:w-auto">
                   <div className="flex items-center gap-4 text-[#94A3B8]">
                     <div className="flex items-center gap-1.5 text-xs font-bold"><Eye size={14} /> {note.views || 0}</div>
                     <div className="flex items-center gap-1.5 text-xs font-bold"><ThumbsUp size={14} /> {note.likes || 0}</div>
