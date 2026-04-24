@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signInWithPopup,
   updateProfile,
   setPersistence,
@@ -46,7 +46,7 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
     try {
       // Set persistence based on "Remember Me"
       await setPersistence(
-        auth, 
+        auth,
         rememberMe ? browserLocalPersistence : browserSessionPersistence
       );
 
@@ -102,12 +102,12 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 font-inter overflow-hidden relative">
       {/* Background Decorative Element */}
       <div className="absolute inset-0 max-w-[1280px] h-full mx-auto pointer-events-none" />
-      
+
       <div className="w-full max-w-[440px] flex flex-col gap-10 relative z-10">
         {/* Logo Section */}
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 bg-[#1E293B] shadow-sm rounded-lg flex items-center justify-center transform rotate-45">
-             <div className="w-5 h-5 bg-white/20 rounded-full" />
+            <div className="w-5 h-5 bg-white/20 rounded-full" />
           </div>
           <h1 className="text-[24px] font-bold text-[#1E293B]">Notes Hub</h1>
         </div>
@@ -137,7 +137,7 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
             {/* Name Field (Signup only) */}
             <AnimatePresence mode="wait">
               {!isLogin && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -145,8 +145,8 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
                 >
                   <label className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-[1.2px]">Full Name</label>
                   <div className="relative group">
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="John Doe"
                       required={!isLogin}
                       value={name}
@@ -163,8 +163,8 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
             <div className="flex flex-col gap-2">
               <label className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-[1.2px]">Email address</label>
               <div className="relative group">
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   placeholder="name@gmail.com"
                   required
                   value={email}
@@ -179,8 +179,8 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
             <div className="flex flex-col gap-2">
               <label className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-[1.2px]">Password</label>
               <div className="relative group">
-                <input 
-                  type={showPassword ? "text" : "password"} 
+                <input
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   required
                   value={password}
@@ -188,7 +188,7 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
                   className="w-full h-12 pl-12 pr-12 bg-white border border-[#E2E8F0] rounded-lg text-base text-[#1E293B] placeholder-[#CBD5E1] outline-none focus:border-[#1E293B] transition-all"
                 />
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">lock</span>
-                <span 
+                <span
                   className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] cursor-pointer hover:text-[#475569] select-none"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -199,19 +199,18 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
 
             {/* Extra Options */}
             <div className="flex items-center justify-between py-1">
-              <div 
+              <div
                 className="flex items-center gap-2 cursor-pointer group"
                 onClick={() => setRememberMe(!rememberMe)}
               >
-                <div className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${
-                  rememberMe ? 'bg-[#1E293B] border-[#1E293B]' : 'border-[#CBD5E1] bg-white group-hover:border-[#94A3B8]'
-                }`}>
-                   {rememberMe && <span className="material-symbols-outlined text-white text-[12px] font-bold">check</span>}
+                <div className={`w-4 h-4 rounded border transition-all flex items-center justify-center ${rememberMe ? 'bg-[#1E293B] border-[#1E293B]' : 'border-[#CBD5E1] bg-white group-hover:border-[#94A3B8]'
+                  }`}>
+                  {rememberMe && <span className="material-symbols-outlined text-white text-[12px] font-bold">check</span>}
                 </div>
                 <span className="text-sm text-[#475569]">Remember for 30 days</span>
               </div>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleForgotPassword}
                 className="text-sm font-semibold text-[#197FE6] hover:underline"
               >
@@ -220,7 +219,7 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
             </div>
 
             {/* Submit Button */}
-            <Button 
+            <Button
               type="submit"
               disabled={loading}
               className="w-full h-14 bg-[#1E293B] text-white text-base font-bold rounded-lg shadow-md hover:bg-[#334155] transition-all disabled:opacity-50 mt-2"
@@ -236,7 +235,7 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
             </div>
 
             {/* Google Sign In */}
-            <button 
+            <button
               type="button"
               onClick={handleGoogleSignIn}
               className="w-full h-14 bg-white border border-[#E2E8F0] rounded-lg flex items-center justify-center gap-3 hover:bg-[#F8FAFC] transition-all"
@@ -254,23 +253,23 @@ export default function AuthContent({ initialMode = 'login' }: AuthContentProps)
 
         {/* Toggle Login/Signup */}
         <div className="flex items-center justify-center gap-1.5 py-4">
-           <span className="text-base text-[#64748B]">{isLogin ? "Don't have an account?" : "Already have an account?"}</span>
-           <button 
-             onClick={() => {
-               setIsLogin(!isLogin);
-               setError('');
-             }}
-             className="text-base font-bold text-[#197FE6] hover:underline"
-           >
-             {isLogin ? 'Sign up' : 'Sign in'}
-           </button>
+          <span className="text-base text-[#64748B]">{isLogin ? "Don't have an account?" : "Already have an account?"}</span>
+          <button
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+            }}
+            className="text-base font-bold text-[#197FE6] hover:underline"
+          >
+            {isLogin ? 'Sign up' : 'Sign in'}
+          </button>
         </div>
 
         {/* Footer Links */}
         <div className="flex items-center justify-center gap-6 mt-4 opacity-50">
-           <a href="#" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[1px] hover:text-[#475569]">Privacy Policy</a>
-           <a href="#" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[1px] hover:text-[#475569]">Terms of Service</a>
-           <a href="#" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[1px] hover:text-[#475569]">Support</a>
+          <a href="#" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[1px] hover:text-[#475569]">Privacy Policy</a>
+          <a href="#" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[1px] hover:text-[#475569]">Terms of Service</a>
+          <a href="#" className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[1px] hover:text-[#475569]">Support</a>
         </div>
       </div>
     </div>

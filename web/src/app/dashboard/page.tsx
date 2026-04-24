@@ -13,12 +13,16 @@ import {
   Settings, 
   LogOut,
   Bell,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import UploadNoteModal from '@/components/UploadNoteModal';
+
 import { auth, db } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+
 import { useState, useEffect } from 'react';
 
 export default function DashboardPage() {
@@ -30,6 +34,7 @@ export default function DashboardPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Set mounted state
   useEffect(() => {
@@ -43,54 +48,79 @@ export default function DashboardPage() {
     }
   }, [user, loading, router]);
 
-  // Data Fetching and Onboarding Check
-  useEffect(() => {
+  const fetchData = async () => {
     if (!user) return;
+    try {
+      setLoadingData(true);
+      // 1. Fetch User Data (Branch, Semester, Year)
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setUserData(data);
 
-    const fetchData = async () => {
-      try {
-        setLoadingData(true);
-        // 1. Fetch User Data (Branch, Semester, Year)
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUserData(data);
-
-          // 1.5 Check if onboarding is completed
-          if (!data.onboardingCompleted) {
-            router.push('/questionnaire');
-            return;
-          }
-
-          // 2. Fetch Notes based on User's Branch
-          const notesRef = collection(db, 'notes');
-          const q = query(notesRef, where('branch', '==', data.branch || ''));
-          const querySnapshot = await getDocs(q);
-          
-          let fetchedNotes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
-          
-          // Filter locally to avoid requiring complex Firestore Composite Indexes for beginners
-          if (data.semester) {
-            fetchedNotes = fetchedNotes.filter(note => note.semester === data.semester);
-          }
-          
-          setNotes(fetchedNotes);
-        } else {
-          // User exists in Auth but not in Firestore yet? 
-          // This happens right after signup before questionnaire
+        // 1.5 Check if onboarding is completed
+        if (!data.onboardingCompleted) {
           router.push('/questionnaire');
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load dashboard data.");
-      } finally {
+
+        // 2. Setup Real-time listener for Notes
+        const notesRef = collection(db, 'notes');
+        const branchLower = (data.branch || '').toLowerCase();
+        
+        // Listen for changes
+        const q = query(
+          notesRef, 
+          where('branch', '==', branchLower)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          let fetchedNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+          
+          // Filter locally for semester
+          if (data.semester) {
+            fetchedNotes = fetchedNotes.filter(note => note.semester?.toString() === data.semester?.toString());
+          }
+          
+          // Sort by date
+          fetchedNotes.sort((a, b) => {
+            const dateA = a.createdAt?.seconds || 0;
+            const dateB = b.createdAt?.seconds || 0;
+            return dateB - dateA;
+          });
+
+          setNotes(fetchedNotes);
+          setLoadingData(false);
+        });
+
+        return unsubscribe;
+      } else {
+        router.push('/questionnaire');
         setLoadingData(false);
       }
+    } catch (error) {
+      console.error("Error setting up data listener:", error);
+      setError("Failed to load dashboard data.");
+      setLoadingData(false);
+    }
+  };
+
+  // Data Fetching and Onboarding Check
+  useEffect(() => {
+    let unsubscribe: any;
+    
+    const setup = async () => {
+      unsubscribe = await fetchData();
     };
 
-    fetchData();
+    setup();
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user, router]);
+
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -111,7 +141,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
@@ -221,7 +250,10 @@ export default function DashboardPage() {
         <section>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-[#1E293B]">Recent Notes</h2>
-            <Button className="bg-[#1E293B] text-white rounded-xl px-5 h-10 font-bold flex items-center gap-2 hover:bg-[#334155]">
+            <Button 
+              onClick={() => setIsUploadModalOpen(true)}
+              className="bg-[#1E293B] text-white rounded-xl px-5 h-10 font-bold flex items-center gap-2 hover:bg-[#334155]"
+            >
               <Plus size={18} />
               New Note
             </Button>
@@ -243,22 +275,27 @@ export default function DashboardPage() {
                       <FileText size={20} />
                     </div>
                     <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">
-                      {note.date || 'Recently Added'}
+                      {note.createdAt ? new Date(note.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}
                     </span>
                   </div>
                   <h3 className="text-lg font-bold text-[#1E293B] mb-2">{note.title}</h3>
                   <p className="text-sm text-[#64748B] leading-relaxed line-clamp-2">
-                    {note.description || 'No description available for this note.'}
+                    {note.description || `Study materials for ${note.subject}.`}
                   </p>
                   
                   <div className="mt-6 pt-4 border-t border-[#F1F5F9] flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs font-bold text-[#64748B] bg-[#F1F5F9] px-2 py-1 rounded-md">
                        {note.subject || 'General'}
                     </div>
-                    <div className="flex items-center gap-2 text-[#3B82F6] font-bold text-xs">
-                      <Sparkles size={12} />
-                      AI Summary Available
-                    </div>
+                    <a 
+                      href={note.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-[#3B82F6] font-bold text-xs hover:underline"
+                    >
+                      View Note
+                      <ArrowRight size={12} />
+                    </a>
                   </div>
                 </motion.div>
               ))
@@ -271,7 +308,10 @@ export default function DashboardPage() {
                   <h3 className="text-xl font-bold text-[#1E293B]">No notes found yet</h3>
                   <p className="text-[#64748B] mt-2">There are currently no notes available for {userData?.branch?.toUpperCase()} Semester {userData?.semester}.</p>
                 </div>
-                <Button className="mt-4 bg-[#1E293B] text-white rounded-xl px-6 h-12 font-bold hover:bg-[#334155]">
+                <Button 
+                  onClick={() => setIsUploadModalOpen(true)}
+                  className="mt-4 bg-[#1E293B] text-white rounded-xl px-6 h-12 font-bold hover:bg-[#334155]"
+                >
                   Upload First Note
                 </Button>
               </div>
@@ -279,6 +319,15 @@ export default function DashboardPage() {
           </div>
         </section>
       </main>
+
+      {/* Modals */}
+      <UploadNoteModal 
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        user={user}
+        userData={userData}
+        onUploadSuccess={() => fetchData()}
+      />
     </div>
   );
 }
