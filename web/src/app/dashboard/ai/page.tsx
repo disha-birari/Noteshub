@@ -76,7 +76,7 @@ export default function AIPage() {
                 <Bot size={40} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#1E293B]">Hello {user?.displayName?.split(' ')[0]}!</h2>
+                <h2 className="text-2xl font-bold text-[#1E293B]">Hello {user?.displayName?.split(' ')[0] || 'Student'}!</h2>
                 <p className="text-[#64748B] mt-2 font-medium">
                   I'm your AI tutor. I can help you summarize notes, explain complex topics, or help you prepare for exams.
                 </p>

@@ -163,7 +163,7 @@ export default function DashboardPage() {
         <header className="flex justify-between items-center mb-10">
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-black text-[#1E293B]">
-              Top Picks for {user.displayName?.split(' ')[0]} 🎯
+              Top Picks for {user.displayName?.split(' ')[0] || 'Student'} 🎯
             </h1>
             <p className="text-[#64748B] font-medium">
               Based on your {userData?.branch?.toUpperCase()} Curriculum
